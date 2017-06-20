@@ -169,13 +169,17 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         # If a VSS Checkin comment exists, extract it. Else set default message
         if($comment -match "Comment:((.|\n)*)"){
             $comment = $Matches[0]
+            $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
+            $comment = $comment.Trim() # Remove unnecessary white space
+            if(([string]::IsNullOrEmpty($comment))){
+                $comment = "No comment for this commit"
+            }
         }
         else{
             $comment = "No comment for this commit"
         }
 
-        $commitComment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
-        $commitComment = $commitComment.Trim() # Remove unnecessary white space
+        $commitComment = $comment
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
