@@ -12,13 +12,13 @@ $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSS2Git" -ItemType director
 cd $workingFolder
 
 # Tell script what repository to clone from
-$gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/GitMigration-Test.git"
+$gitRepositoryURL = " "
 
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
 
 # Tell script the name of the Git project (the one that was cloned)
-$gitFolderName = "GitMigration-Test"
+$gitFolderName = " "
 
 git config --global http.sslVerify false
 git clone -b $gitBranchName $gitRepositoryURL
