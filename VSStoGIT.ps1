@@ -217,8 +217,8 @@ ForEach($currentObject in $gitObjectList){
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
-        # Create clean working environment
-        Get-ChildItem -Path "$workingFolder/gitFolderName" -Recurse -exclude .git,README.md | Remove-Item
+        # Make a clean working environment before files are pulled from the VSS repository
+        Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude .git,README.md | Remove-Item
 
         # Load and stage files
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
