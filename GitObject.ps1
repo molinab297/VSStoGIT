@@ -1,5 +1,4 @@
-﻿
-# Represents a Git Commit Object
+﻿# Represents a Git Commit Object
 Class GitCommit{
     [String]$message
     [String]$userName
@@ -16,4 +15,3 @@ Class GitTag{
     [String]$date
     [String]$time
 }
-
