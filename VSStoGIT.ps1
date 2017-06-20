@@ -9,9 +9,8 @@
 
 # Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
-cd $workingFolder
 
-# Tell script what repository to clone from
+# Tell script what Git repository to push data to
 $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NXPipe-GitMigration-Test.git"
 
 # Tell script what Git branch to push data to
@@ -20,15 +19,17 @@ $gitBranchName = "00"
 # Tell script the name of the Git project (the one that was cloned)
 $gitFolderName = "NXPipe-GitMigration-Test"
 
-git config --global http.sslVerify false
-git clone -b $gitBranchName $gitRepositoryURL
-
 # Tell script what VSS repository to pull data from
-$VSS_ServerName = "$/00/NXPipe"
-$VSSHistory     = ss History $VSS_ServerName -R # Grab VSS history
+$VSS_ServerName = "`"$\00\NXPipe`""
 
 ## ----------------------------------------------------------------------------------------
 ###########################################################################################
+
+# Setup working folder
+cd $workingFolder
+git config --global http.sslVerify false
+git clone -b $gitBranchName $gitRepositoryURL
+$VSSHistory = ss History $VSS_ServerName -R # Grab VSS history
 
 #######################  Create Unique VSS Checkin Log ##########################
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
@@ -203,6 +204,7 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 
 New-Item "GitCommands.sh" -type file -force # Create Git command file that will be executed
 New-Item "OverallLog.txt" -type file -force  # Create log file which will contain every git commit/git tag command that is executed
+$commitCounter = 1 # For displaying commit number on top of each commit in OverallLog.txt
 
 # Loop through gitObjectList and add each git commit/tag (in order) to the cloned git repository
 ForEach($currentObject in $gitObjectList){
@@ -210,18 +212,20 @@ ForEach($currentObject in $gitObjectList){
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
+        # Create clean working environment
+        Get-ChildItem -Path "$workingFolder/gitFolderName" -Recurse -exclude .git,README.md | Remove-Item
+
         # Load and stage files
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "$($currentObject.VSSFilesCommand)"
         Add-Content "GitCommands.sh" "git add --all"
         Add-Content "GitCommands.sh" "git commit -m `"$($currentObject.message)`""
 
-        # Change Commit's Author name and date
+        # Change Committer's name
         Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
-        Add-Content "GitCommands.sh" "git commit --amend --date `"$($currentObject.date) $($currentObject.time) -0700`" --no-edit"
 
         # Change Commit's date
-        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
+        Add-Content "GitCommands.sh" "export GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
         Add-Content "GitCommands.sh" "git commit --amend --no-edit"
 
         # Pushes to defined branch of the Git repository
@@ -243,13 +247,14 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
 
-    Add-Content "GitCommands.sh" "sleep 5"
+    Add-Content "GitCommands.sh" "sleep 2"
     # Send report to log file
+    Add-Content "OverallLog.txt" "******** $commitCounter ********"
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
     Add-Content "OverallLog.txt" "`n`n"
     # execute git commands script
     Start-Process -FilePath "C:\Program Files\Git\bin\sh.exe" -ArgumentList  "-l $workingFolder\GitCommands.sh" -Wait
-
+    $commitCounter++
 }
 
 # Delete no longer needed log files
