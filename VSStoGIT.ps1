@@ -8,17 +8,17 @@
 ## ----------------------------------------------------------------------------------------
 
 # Tell script where to place working folder
-$workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSS2Git" -ItemType directory -force
+$workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
 cd $workingFolder
 
 # Tell script what repository to clone from
-$gitRepositoryURL = " "
+$gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NXPipe-GitMigration-Test.git"
 
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
 
 # Tell script the name of the Git project (the one that was cloned)
-$gitFolderName = " "
+$gitFolderName = "NXPipe-GitMigration-Test"
 
 git config --global http.sslVerify false
 git clone -b $gitBranchName $gitRepositoryURL
@@ -131,6 +131,8 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         # Extract VSS Label title
         $tagName = $checkin | select-string -Pattern "Label:"
         $tagName = $tagName -Replace 'Label:',''
+        $tagName = $tagName -Replace ' ', '' # Remove all whitespace (Git tags don't allow whitespace)
+        $tagName = $tagName -Replace '"', ''
 
         # Extract VSS Label comment
         $tagComment = $checkin | select-string -Pattern "Label comment:"
@@ -170,6 +172,7 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         }
 
         $commitComment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
+        $commitComment = $commitComment.Trim() # Remove unnecessary white space
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
@@ -198,7 +201,7 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 #     repository should be filled with every VSS file and its corresponding history.
 ##################################################################################
 
-New-Item "GitCommands.cmd" -type file -force # Create Git command file that will be executed
+New-Item "GitCommands.sh" -type file -force # Create Git command file that will be executed
 New-Item "OverallLog.txt" -type file -force  # Create log file which will contain every git commit/git tag command that is executed
 
 # Loop through gitObjectList and add each git commit/tag (in order) to the cloned git repository
@@ -208,46 +211,47 @@ ForEach($currentObject in $gitObjectList){
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
         # Load and stage files
-        Set-Content "GitCommands.cmd" "cd $gitFolderName" -force
-        Add-Content "GitCommands.cmd" "$($currentObject.VSSFilesCommand)"
-        Add-Content "GitCommands.cmd" "git add --all"
-        Add-Content "GitCommands.cmd" "git commit -m `"$($currentObject.message)`""
+        Set-Content "GitCommands.sh" "cd $gitFolderName" -force
+        Add-Content "GitCommands.sh" "$($currentObject.VSSFilesCommand)"
+        Add-Content "GitCommands.sh" "git add --all"
+        Add-Content "GitCommands.sh" "git commit -m `"$($currentObject.message)`""
 
         # Change Commit's Author name and date
-        Add-Content "GitCommands.cmd" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
-        Add-Content "GitCommands.cmd" "git commit --amend --date `"$($currentObject.date) $($currentObject.time) -0700`" --no-edit"
+        Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
+        Add-Content "GitCommands.sh" "git commit --amend --date `"$($currentObject.date) $($currentObject.time) -0700`" --no-edit"
 
         # Change Commit's date
-        Add-Content "GitCommands.cmd" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
-        Add-Content "GitCommands.cmd" "git commit --amend --no-edit"
+        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
+        Add-Content "GitCommands.sh" "git commit --amend --no-edit"
 
         # Pushes to defined branch of the Git repository
-        Add-Content "GitCommands.cmd" "git push origin $gitBranchName"
+        Add-Content "GitCommands.sh" "git push origin $gitBranchName -f"
     }
 
     # Else object is a Git Tag object. Call Git tag commands
     elseif($currentObject.GetType().FullName -eq "GitTag"){
 
-        Set-Content "GitCommands.cmd" "cd $gitFolderName" -force
+        Set-Content "GitCommands.sh" "cd $gitFolderName" -force
 
         # Set Tagger name, email, and commit date
-        Add-Content "GitCommands.cmd" "git config --global user.name `"$($currentObject.userName)`""
-        Add-Content "GitCommands.cmd" "git config --global user.email `"$($currentObject.userName)@email.com`""
-        Add-Content "GitCommands.cmd" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
+        Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
+        Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@email.com`""
+        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
 
         # Create and push annotated Git Tag
-        Add-Content "GitCommands.cmd" "git tag -a`"$($currentObject.title)` -m `"$($currentObject.message)`" "
-        Add-Content "GitCommands.cmd" "git push origin $gitBranchName --tags"
+        Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
+        Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
 
-    Add-Content "GitCommands.cmd" "sleep 3"
+    Add-Content "GitCommands.sh" "sleep 5"
     # Send report to log file
-    Get-Content "GitCommands.cmd" | Add-Content "OverallLog.txt"
+    Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
     Add-Content "OverallLog.txt" "`n`n"
     # execute git commands script
-    cmd.exe /C 'GitCommands.cmd'
+    Start-Process -FilePath "C:\Program Files\Git\bin\sh.exe" -ArgumentList  "-l $workingFolder\GitCommands.sh" -Wait
+
 }
 
 # Delete no longer needed log files
 Remove-Item $UniqueVSSCheckinLog
-Remove-Item "GitCommands.cmd"
+Remove-Item "GitCommands.sh"
