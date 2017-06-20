@@ -121,7 +121,10 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
     $commit_stats = $commit_stats -Replace 'User: ',''
     $commit_stats = $commit_stats -Replace 'Date: ',''
     $commit_stats = $commit_stats -Replace 'Time: ',''
-    $commit_stats = $commit_stats -split "\s+"
+    $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
+
+    # Get Unix time stamp. Pass in the Date and Time as parameters.
+    $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
 
     # If the checkin is a VSS Label
     if($checkin -match "Label:"){
@@ -145,11 +148,10 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         }
 
         # Fill Git Tag object with extracted VSS label info
-        $newGitTag.title    = $tagName
-        $newGitTag.message  = $tagComment
-        $newGitTag.userName = $commit_stats[0]
-        $newGitTag.date     = $commit_stats[1]
-        $newGitTag.time     = $commit_stats[2]
+        $newGitTag.title     = $tagName
+        $newGitTag.message   = $tagComment
+        $newGitTag.userName  = $commit_stats[0]
+        $newGitTag.timeStamp = $unixTimeStamp
 
         # Push Git Tag object onto list
         $gitObjectList.Add($newGitTag) > $null
@@ -177,10 +179,9 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
-        $newGitCommit.date            = $commit_stats[1]
-        $newGitCommit.time            = $commit_stats[2]
         $newGitCommit.message         = $commitComment
         $newGitCommit.VSSFilesCommand = $command
+        $newGitCommit.timeStamp       = $unixTimeStamp
 
         # Push Git Commit object onto list
         $gitObjectList.Add($newGitCommit) > $null
@@ -225,7 +226,7 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
 
         # Change Commit's date
-        Add-Content "GitCommands.sh" "export GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
+        Add-Content "GitCommands.sh" "export GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
         Add-Content "GitCommands.sh" "git commit --amend --no-edit"
 
         # Pushes to defined branch of the Git repository
@@ -240,14 +241,14 @@ ForEach($currentObject in $gitObjectList){
         # Set Tagger name, email, and commit date
         Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
         Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@email.com`""
-        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.date) $($currentObject.time) -0700`""
+        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
 
         # Create and push annotated Git Tag
         Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
 
-    Add-Content "GitCommands.sh" "sleep 2"
+    Add-Content "GitCommands.sh" "sleep 3"
     # Send report to log file
     Add-Content "OverallLog.txt" "******** $commitCounter ********"
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
