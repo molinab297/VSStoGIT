@@ -217,8 +217,14 @@ ForEach($currentObject in $gitObjectList){
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
-        # Make a clean working environment before files are pulled from the VSS repository
-        Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude .git,README.md | Remove-Item
+        # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
+        # Change permissions on every file except README.md and .git
+        Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
+        Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md |
+        Select -ExpandProperty FullName |
+        Where {$_ -notlike "$workingFolder/$gitFolderName/.git"} |
+        sort length -Descending |
+        Remove-Item -force
 
         # Load and stage files
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
@@ -227,6 +233,7 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git commit -m `"$($currentObject.message)`""
 
         # Change Committer's name
+        Add-Content "GitCommands.sh" "git commit --amend --date `"$($currentObject.timeStamp) +0000`" --no-edit"
         Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
 
         # Change Commit's date
@@ -252,7 +259,7 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
 
-    Add-Content "GitCommands.sh" "sleep 3"
+    Add-Content "GitCommands.sh" "sleep 2"
     # Send report to log file
     Add-Content "OverallLog.txt" "******** $commitCounter ********"
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
