@@ -22,6 +22,9 @@ $gitFolderName = "NXPipe-GitMigration-Test"
 # Tell script what VSS repository to pull data from
 $VSS_ServerName = "`"$\00\NXPipe`""
 
+# Tell script the location of Git Bash (usually in C:\Program Files)
+$gitBashPath = "C:\Program Files\Git\bin\sh.exe"
+
 ## ----------------------------------------------------------------------------------------
 ###########################################################################################
 
@@ -59,10 +62,10 @@ move "temp.txt" $HistoryFileName -force
 $UniqueVSSCheckinLog = "VSSCheckinLog-Unique.txt"
 New-Item "$workingFolder/$UniqueVSSCheckinLog" -type file
 
-# Get VSS checkins with dates that are greater to or equal than 2005
-$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][5-9])|([1][0-9]))(.*)"
+# Get VSS checkins with dates that are greater to or equal than 2004
+$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][4-9])|([1][0-9]))(.*)"
 
-# Reverse date/time content (Git commands will be performed starting from 2005-Present)
+# Reverse date/time content (Git commands will be performed starting from 2004-Present)
 [array]::Reverse($content)
 
 # Extract dates/times
@@ -89,7 +92,6 @@ for($index = 0; $index -lt $date.Length; $index++) {
       add-content "$workingFolder/$UniqueVSSCheckinLog" $uniqueDate -force
     }
 }
-
 
 #######################  Construct Git Object List ##############################
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
@@ -262,8 +264,8 @@ ForEach($currentObject in $gitObjectList){
     Add-Content "OverallLog.txt" "******** $commitCounter ********"
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
     Add-Content "OverallLog.txt" "`n`n"
-    # execute git commands script
-    Start-Process -FilePath "C:\Program Files\Git\bin\sh.exe" -ArgumentList  "-l $workingFolder\GitCommands.sh" -Wait
+    # Execute git commands script
+    Start-Process -FilePath $gitBash -ArgumentList  "-l $workingFolder/GitCommands.sh" -Wait
     $commitCounter++
 }
 
