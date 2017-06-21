@@ -60,7 +60,7 @@ $UniqueVSSCheckinLog = "VSSCheckinLog-Unique.txt"
 New-Item "$workingFolder/$UniqueVSSCheckinLog" -type file
 
 # Get VSS checkins with dates that are greater to or equal than 2005
-$content     = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][5-9])|([1][0-9]))(.*)"
+$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][5-9])|([1][0-9]))(.*)"
 
 # Reverse date/time content (Git commands will be performed starting from 2005-Present)
 [array]::Reverse($content)
@@ -164,26 +164,24 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         $newGitCommit = New-Object GitCommit
 
         # Get VSS Checkin message
-        $comment = $checkin | Out-String
+        $commitComment = $checkin | Out-String
 
         # If a VSS Checkin comment exists, extract it. Else set default message
-        if($comment -match "Comment:((.|\n)*)"){
-            $comment = $Matches[0]
-            $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
-            $comment = $comment.Trim() # Remove unnecessary white space
+        if($commitComment -match "Comment:((.|\n)*)"){
+            $commitComment = $Matches[0]
+            $commitComment = $commitComment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
+            $commitComment = $commitComment.Trim() # Remove unnecessary white space
             if(([string]::IsNullOrEmpty($comment))){
-                $comment = "No comment for this commit"
+                $commitComment = "No comment for this commit"
             }
         }
         else{
-            $comment = "No comment for this commit"
+            $commitComment = "No comment for this commit"
         }
-
-        $commitComment = $comment
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
-        $newGitCommit.message         = $commitComment
+        $newGitCommit.message         = $comment
         $newGitCommit.VSSFilesCommand = $command
         $newGitCommit.timeStamp       = $unixTimeStamp
 
@@ -218,13 +216,14 @@ ForEach($currentObject in $gitObjectList){
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
         # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
-        # Change permissions on every file except README.md and .git
+        # First need to change permissions on every file except README.md and .git
         Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
+        # Remove files
         Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md |
         Select -ExpandProperty FullName |
         Where {$_ -notlike "$workingFolder/$gitFolderName/.git"} |
         sort length -Descending |
-        Remove-Item -force
+        Remove-Item -Recurse -force
 
         # Load and stage files
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
@@ -247,9 +246,8 @@ ForEach($currentObject in $gitObjectList){
     # Else object is a Git Tag object. Call Git tag commands
     elseif($currentObject.GetType().FullName -eq "GitTag"){
 
-        Set-Content "GitCommands.sh" "cd $gitFolderName" -force
-
         # Set Tagger name, email, and commit date
+        Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
         Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@email.com`""
         Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
