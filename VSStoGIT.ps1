@@ -45,7 +45,7 @@ $HistoryFileName = "VSSHistory.txt"
 New-Item "$workingFolder/$HistoryFileName" -type file
 New-Item "temp.txt" -type file
 add-content -path "$workingFolder/$HistoryFileName" -value $VSSHistory
-get-content $HistoryFileName | select -Skip 2 | set-content "temp.txt" # Remove unnecessary 'Building list...' part of VSS History log
+get-content $HistoryFileName | select -Skip 3 | set-content "temp.txt" # Remove unnecessary 'Building list...' part of VSS History log
 move "temp.txt" $HistoryFileName -force
 
 
@@ -246,7 +246,7 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
-    
+
     Add-Content "GitCommands.sh" "sleep 2"
     # Send report to log file
     Add-Content "OverallLog.txt" "******** $commitCounter ********"
