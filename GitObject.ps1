@@ -16,9 +16,9 @@ Class GitTag{
 
 ################# Function GetUnixTimeStamp ####################
 # Purpose: Git accepts 3 types of time formats when modifying
-# the date/time of Git Commits.Unix time stamp format is one of
-# these time formats. This function converts date and time into
-# a Unix time stamp.
+# the date/time of Git Commits. The Unix time stamp format is 
+# one of these time formats. This function converts date and time 
+# into a Unix time stamp.
 #
 # INPUT:
 #   - [string]$date : Date in 'MM\DD\YY' format

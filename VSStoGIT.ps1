@@ -1,6 +1,6 @@
 . C:/Users/MolinaBA/Desktop/GitObject.ps1
 
-#################################### Flowchart of VSStoGit process #####################################################
+######################################### Flowchart of VSStoGit process ################################################
 # Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
 ########################################################################################################################
 
@@ -16,7 +16,7 @@ $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NX
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
 
-# Tell script the name of the Git project (the one that was cloned)
+# Tell script the name of the Git project (the repository that is going to be cloned)
 $gitFolderName = "NXPipe-GitMigration-Test"
 
 # Tell script what VSS repository to pull data from
