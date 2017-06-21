@@ -5,27 +5,18 @@
 ########################################################################################################################
 
 ################################## Script Set-Up Variables ################################
-## ----------------------------------------------------------------------------------------
-
 # Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
-
 # Tell script what Git repository to push data to
 $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NXPipe-GitMigration-Test.git"
-
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
-
 # Tell script the name of the Git project (the repository that is going to be cloned)
 $gitFolderName = "NXPipe-GitMigration-Test"
-
 # Tell script what VSS repository to pull data from
 $VSS_ServerName = "`"$\00\NXPipe`""
-
 # Tell script the location of Git Bash (usually in C:\Program Files)
 $gitBashPath = "C:\Program Files\Git\bin\sh.exe"
-
-## ----------------------------------------------------------------------------------------
 ###########################################################################################
 
 # Setup working folder
@@ -161,7 +152,6 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 
     # Else this must be a normal VSS file checkin
     else{
-
         # Create new Git Commit object
         $newGitCommit = New-Object GitCommit
 
@@ -207,7 +197,7 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 #     repository should be filled with every VSS file and its corresponding history.
 ##################################################################################
 
-New-Item "GitCommands.sh" -type file -force # Create Git command file that will be executed
+New-Item "GitCommands.sh" -type file -force  # Create Git command file that will be executed
 New-Item "OverallLog.txt" -type file -force  # Create log file which will contain every git commit/git tag command that is executed
 $commitCounter = 1 # For displaying commit number on top of each commit in OverallLog.txt
 
@@ -216,7 +206,6 @@ ForEach($currentObject in $gitObjectList){
 
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
-
         # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
         # First need to change permissions on every file except README.md and .git
         Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
@@ -227,7 +216,7 @@ ForEach($currentObject in $gitObjectList){
         sort length -Descending |
         Remove-Item -Recurse -force
 
-        # Load and stage file
+        # Load and stage files
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "$($currentObject.VSSFilesCommand)"
         Add-Content "GitCommands.sh" "git add --all"
@@ -247,7 +236,6 @@ ForEach($currentObject in $gitObjectList){
 
     # Else object is a Git Tag object. Call Git tag commands
     elseif($currentObject.GetType().FullName -eq "GitTag"){
-
         # Set Tagger name, email, and commit date
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
@@ -258,7 +246,7 @@ ForEach($currentObject in $gitObjectList){
         Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
-
+    
     Add-Content "GitCommands.sh" "sleep 2"
     # Send report to log file
     Add-Content "OverallLog.txt" "******** $commitCounter ********"

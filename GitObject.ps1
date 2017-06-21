@@ -16,8 +16,8 @@ Class GitTag{
 
 ################# Function GetUnixTimeStamp ####################
 # Purpose: Git accepts 3 types of time formats when modifying
-# the date/time of Git Commits. The Unix time stamp format is 
-# one of these time formats. This function converts date and time 
+# the date/time of Git Commits. The Unix time stamp format is
+# one of these time formats. This function converts date and time
 # into a Unix time stamp.
 #
 # INPUT:
@@ -33,8 +33,10 @@ param([string]$date,[string]$time)
 
   $time = $time -Replace 'A','AM'
   $time = $time -Replace 'P','PM'
-  $militaryTime =  "{0:HH:mm}" -f [datetime]"$time" # convert time to military time
-  $militaryTime_to_seconds = ([timespan]"$($militaryTime):00.00").TotalSeconds    # convert military time to seconds
+  # convert time to military time
+  $militaryTime =  "{0:HH:mm}" -f [datetime]"$time"
+  # convert military time to seconds
+  $militaryTime_to_seconds = ([timespan]"$($militaryTime):00.00").TotalSeconds
   # convert date from vss file to seconds since epoch
   $date_to_seconds = (New-TimeSpan -Start "01/01/1970" -End $date).TotalSeconds
   # add both seconds together and bam theres the date/time converted to a unix timestamp
