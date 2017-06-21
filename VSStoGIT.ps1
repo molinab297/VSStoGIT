@@ -1,6 +1,6 @@
 . C:/Users/MolinaBA/Desktop/GitObject.ps1
 
-#################################### Flowchart of VSStoGit process #####################################################
+######################################### Flowchart of VSStoGit process ################################################
 # Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
 ########################################################################################################################
 
@@ -16,7 +16,7 @@ $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NX
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
 
-# Tell script the name of the Git project (the one that was cloned)
+# Tell script the name of the Git project (the repository that is going to be cloned)
 $gitFolderName = "NXPipe-GitMigration-Test"
 
 # Tell script what VSS repository to pull data from
@@ -217,8 +217,8 @@ ForEach($currentObject in $gitObjectList){
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
-        # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
-        # Change permissions on every file except README.md and .git
+        # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit.
+        # Change permissions on every file except README.md and .git before removing files
         Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
         Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md |
         Select -ExpandProperty FullName |
