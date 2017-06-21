@@ -227,7 +227,7 @@ ForEach($currentObject in $gitObjectList){
         sort length -Descending |
         Remove-Item -Recurse -force
 
-        # Load and stage files
+        # Load and stage file
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "$($currentObject.VSSFilesCommand)"
         Add-Content "GitCommands.sh" "git add --all"
