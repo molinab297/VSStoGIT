@@ -1,5 +1,5 @@
 . C:/Users/MolinaBA/Desktop/GitObject.ps1
-
+Clear-Host
 ######################################### Flowchart of VSStoGit process ################################################
 # Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
 ########################################################################################################################
