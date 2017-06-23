@@ -172,7 +172,7 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
-        $newGitCommit.message         = $comment
+        $newGitCommit.message         = $commitComment
         $newGitCommit.VSSFilesCommand = $command
         $newGitCommit.timeStamp       = $unixTimeStamp
         # Push Git Commit object onto list
