@@ -1,25 +1,34 @@
 . C:/Users/MolinaBA/Desktop/GitObject.ps1
 Clear-Host
-######################################### Flowchart of VSStoGit process ################################################
+#################################### Flowchart of VSStoGit process #####################################################
 # Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
 ########################################################################################################################
 
 ################################## Script Set-Up Variables ################################
-# Tell script where to place working folder (This folder will contain log/output files from the script and the git repository)
+## ----------------------------------------------------------------------------------------
+
+# Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
+
 # Tell script what Git repository to push data to
 $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NXPipe-GitMigration-Test.git"
+
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
-# Tell script the name of the Git project (the repository that is going to be cloned)
+
+# Tell script the name of the Git project (the one that was cloned)
 $gitFolderName = "NXPipe-GitMigration-Test"
+
 # Tell script what VSS repository to pull data from
 $VSS_ServerName = "`"$\00\NXPipe`""
+
 # Tell script the location of Git Bash (usually in C:\Program Files)
 $gitBashPath = "C:\Program Files\Git\bin\sh.exe"
+
+## ----------------------------------------------------------------------------------------
 ###########################################################################################
 
-# Clone git repository and grab VSS history
+# Setup working folder
 cd $workingFolder
 git config --global http.sslVerify false
 git clone -b $gitBranchName $gitRepositoryURL
@@ -53,7 +62,7 @@ $UniqueVSSCheckinLog = "VSSCheckinLog-Unique.txt"
 New-Item "$workingFolder/$UniqueVSSCheckinLog" -type file
 
 # Get VSS checkins with dates that are greater to or equal than 2004
-$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][4-9])|([1][0-9]))(.*)"
+$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][5-9])|([1][0-9]))(.*)"
 
 # Reverse date/time content (Git commands will be performed starting from 2004-Present)
 [array]::Reverse($content)
@@ -63,13 +72,13 @@ $content = $content -replace "User:", " "
 $content = $content -replace "Date:", " "
 $content = $content -replace "Time:", " "
 $content = $content.Trim()
-$date    = $content -Replace '^.[a-z]*', ''
-$date    = $date -Replace '^[^\s]*', ''
-$date    = $date.Trim()
-$time    = $date -Replace '^([^\s]+)\s', ''
-$time    = $time.Trim()
-$date    = $date -Replace '\s(.*)', ''
-$date    = $date.Trim()
+$date = $content -Replace '^.[a-z]*', ''
+$date = $date -Replace '^[^\s]*', ''
+$date = $date.Trim()
+$time = $date -Replace '^([^\s]+)\s', ''
+$time = $time.Trim()
+$date = $date -Replace '\s(.*)', ''
+$date = $date.Trim()
 $newDate = $date -replace '/','-'
 
 ## Fill the unique dates/times text file with unique VSS Checkins. A unique VSS checkin will allow this script to
@@ -79,9 +88,10 @@ for($index = 0; $index -lt $date.Length; $index++) {
     $Same_Time_Diff_Date = ($time[$index] -match $time[($index+1)]) -and !($date[$index] -match $date[($index+1)])
     if($Different_Time -or $Same_Time_Diff_Date){
       $uniqueDate  = "ss Get $VSS_ServerName -R -Vd$($newDate[$index])"";""$($time[$index]) -I-N" # Creates SourceSafe command to get file by dates & time
-      add-content "$workingFolder/$UniqueVSSCheckinLog" $uniqueDate
+      add-content "$workingFolder/$UniqueVSSCheckinLog" $uniqueDate -force
     }
 }
+
 
 #######################  Construct Git Object List ##############################
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
@@ -99,7 +109,6 @@ for($index = 0; $index -lt $date.Length; $index++) {
 # Create empty list to store Git Commit and Git Tag objects
 $gitObjectList = New-Object System.Collections.ArrayList
 
-# Loop through each unique checkin in UniqueVSSCheckinLog.txt
 ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
     $command = $checkin
     $checkin = $checkin -Replace 'Get','History'           # prepare vss history command
@@ -145,36 +154,41 @@ ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
         $newGitTag.message   = $tagComment
         $newGitTag.userName  = $commit_stats[0]
         $newGitTag.timeStamp = $unixTimeStamp
+
         # Push Git Tag object onto list
         $gitObjectList.Add($newGitTag) > $null
     }
 
     # Else this must be a normal VSS file checkin
     else{
+
         # Create new Git Commit object
         $newGitCommit = New-Object GitCommit
 
         # Get VSS Checkin message
-        $commitComment = $checkin | Out-String
+        $comment = $checkin | Out-String
 
         # If a VSS Checkin comment exists, extract it. Else set default message
-        if($commitComment -match "Comment:((.|\n)*)"){
-            $commitComment = $Matches[0]
-            $commitComment = $commitComment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
-            $commitComment = $commitComment.Trim() # Remove unnecessary white space
+        if($comment -match "Comment:((.|\n)*)"){
+            $comment = $Matches[0]
+            $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
+            $comment = $comment.Trim() # Remove unnecessary white space
             if(([string]::IsNullOrEmpty($comment))){
-                $commitComment = "No comment for this commit"
+                $comment = "No comment for this commit"
             }
         }
         else{
-            $commitComment = "No comment for this commit"
+            $comment = "No comment for this commit"
         }
+
+        $commitComment = $comment
 
         # Fill Git Commit object with extracted VSS Checkin info
         $newGitCommit.userName        = $commit_stats[0]
         $newGitCommit.message         = $commitComment
         $newGitCommit.VSSFilesCommand = $command
         $newGitCommit.timeStamp       = $unixTimeStamp
+
         # Push Git Commit object onto list
         $gitObjectList.Add($newGitCommit) > $null
     }
@@ -251,7 +265,7 @@ ForEach($currentObject in $gitObjectList){
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
     Add-Content "OverallLog.txt" "`n`n"
     # Execute git commands script
-    Start-Process -FilePath $gitBashPath -ArgumentList  "-l $workingFolder/GitCommands.sh" -Wait
+    Start-Process -FilePath "$gitBashPath" -ArgumentList  "-l $workingFolder/GitCommands.sh" -Wait
     $commitCounter++
 }
 
