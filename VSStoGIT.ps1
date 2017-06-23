@@ -251,7 +251,7 @@ ForEach($currentObject in $gitObjectList){
     Get-Content "GitCommands.sh" | Add-Content "OverallLog.txt"
     Add-Content "OverallLog.txt" "`n`n"
     # Execute git commands script
-    Start-Process -FilePath $gitBash -ArgumentList  "-l $workingFolder/GitCommands.sh" -Wait
+    Start-Process -FilePath $gitBashPath -ArgumentList  "-l $workingFolder/GitCommands.sh" -Wait
     $commitCounter++
 }
 
