@@ -1,4 +1,5 @@
-. C:/Users/MolinaBA/Desktop/GitObject.ps1
+. C:/Users/MolinaBA/Desktop/VSStoGIT/GitObject.ps1
+. C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
 Clear-Host
 #################################### Flowchart of VSStoGit process #####################################################
 # Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
@@ -11,16 +12,16 @@ Clear-Host
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
 
 # Tell script what Git repository to push data to
-$gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/NXPipe-GitMigration-Test.git"
+$gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/WinMQ-GitMigration-Test.git"
 
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
 
 # Tell script the name of the Git project (the one that was cloned)
-$gitFolderName = "NXPipe-GitMigration-Test"
+$gitFolderName = "WinMQ-GitMigration-Test"
 
 # Tell script what VSS repository to pull data from
-$VSS_ServerName = "`"$\00\NXPipe`""
+$VSS_ServerName = "`"$\00\WinMQ`""
 
 # Tell script the location of Git Bash (usually in C:\Program Files)
 $gitBashPath = "C:\Program Files\Git\bin\sh.exe"
@@ -62,7 +63,7 @@ $UniqueVSSCheckinLog = "VSSCheckinLog-Unique.txt"
 New-Item "$workingFolder/$UniqueVSSCheckinLog" -type file
 
 # Get VSS checkins with dates that are greater to or equal than 2004
-$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][5-9])|([1][0-9]))(.*)"
+$content     = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][4-9])|([1][0-9]))(.*)"
 
 # Reverse date/time content (Git commands will be performed starting from 2004-Present)
 [array]::Reverse($content)
@@ -81,17 +82,19 @@ $date = $date -Replace '\s(.*)', ''
 $date = $date.Trim()
 $newDate = $date -replace '/','-'
 
+
 ## Fill the unique dates/times text file with unique VSS Checkins. A unique VSS checkin will allow this script to
 ## get the source/label files from VSS that were checked in at that exact date and time.
 for($index = 0; $index -lt $date.Length; $index++) {
     $Different_Time = !($time[$index] -match $time[($index+1)]) -or !($time[($index+1)])
     $Same_Time_Diff_Date = ($time[$index] -match $time[($index+1)]) -and !($date[$index] -match $date[($index+1)])
     if($Different_Time -or $Same_Time_Diff_Date){
-      $uniqueDate  = "ss Get $VSS_ServerName -R -Vd$($newDate[$index])"";""$($time[$index]) -I-N" # Creates SourceSafe command to get file by dates & time
+      $lowerBound = SubtractByOneMin $newDate[$index] $time[$index]
+      $lowerBound = $lowerBound -split ' '
+      $uniqueDate  = "ss Get $VSS_ServerName -R -Vd$($newDate[$index])"";""$($time[$index])~$($lowerBound[0])"";""$($lowerBound[1]) -I-N" # Creates SourceSafe command to get file by dates & time
       add-content "$workingFolder/$UniqueVSSCheckinLog" $uniqueDate -force
     }
 }
-
 
 #######################  Construct Git Object List ##############################
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
@@ -105,93 +108,39 @@ for($index = 0; $index -lt $date.Length; $index++) {
 #   OUTPUT:
 #     - $gitObjectList : A list of Git Tag and Git Commit objects
 #################################################################################
-
 # Create empty list to store Git Commit and Git Tag objects
 $gitObjectList = New-Object System.Collections.ArrayList
 
-ForEach($checkin in Get-Content $workingFolder/$UniqueVSSCheckinLog){
-    $command = $checkin
-    $checkin = $checkin -Replace 'Get','History'           # prepare vss history command
-    $checkin += " -#1"                                     # Append command flag to only display 1 entry
-    $checkin = invoke-expression $checkin | select -Skip 3 # run the vss history command and store the output
+ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
+
+    # prepare vss history command
+    $checkinCommand = $checkinCommand -Replace 'Get','History'
+    # run the vss history command and store the output
+    $checkin = invoke-expression $checkinCommand | select -Skip 3
 
     # Handles when the stupid SourceSafe Command line utility doesnt work (i.e. error "Version not found")
     if($checkin -eq $Null){Continue}
 
-    # Extract VSS Checkin User, Date, and Time info
-    $commit_stats = $checkin | select-string -Pattern "User:"
-    $commit_stats = $commit_stats -Replace 'User: ',''
-    $commit_stats = $commit_stats -Replace 'Date: ',''
-    $commit_stats = $commit_stats -Replace 'Time: ',''
-    $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
-
-    # Get Unix time stamp. Pass in the Date and Time as parameters.
-    $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
-
-    # If the checkin is a VSS Label
-    if($checkin -match "Label:"){
-
-        # Create new Git Tag object
-        $newGitTag = New-Object GitTag
-
-        # Extract VSS Label title
-        $tagName = $checkin | select-string -Pattern "Label:"
-        $tagName = $tagName -Replace 'Label:',''
-        $tagName = $tagName -Replace ' ', '' # Remove all whitespace (Git tags don't allow whitespace)
-        $tagName = $tagName -Replace '"', ''
-
-        # Extract VSS Label comment
-        $tagComment = $checkin | select-string -Pattern "Label comment:"
-        $tagComment = $tagComment -Replace 'Label comment:','' # Remove unnecessary 'Label comment:'
-
-        # VSS label message is empty
-        if($tagComment -eq $Null){
-            $tagComment = "No comment for this tag"
-        }
-
-        # Fill Git Tag object with extracted VSS label info
-        $newGitTag.title     = $tagName
-        $newGitTag.message   = $tagComment
-        $newGitTag.userName  = $commit_stats[0]
-        $newGitTag.timeStamp = $unixTimeStamp
-
-        # Push Git Tag object onto list
+    # Checkin contains both label and file(s) checkin on same date
+    elseif($checkin -match "Checked in" -and $checkin -match "Label:"){
+        $newGitCommit = CreateGitCommit $checkinCommand
+        $newGitTag    = CreateGitTag $checkinCommand
+        $gitObjectList.Add($newGitCommit) > $null
         $gitObjectList.Add($newGitTag) > $null
     }
 
-    # Else this must be a normal VSS file checkin
+    # Checkin contains only a label
+    elseif($checkin -match "Label:"){
+        $newGitTag = CreateGitTag $checkinCommand
+        $gitObjectList.Add($newGitTag) > $null
+    }
+
+    # Checkin contains only file(s) checkins
     else{
-
-        # Create new Git Commit object
-        $newGitCommit = New-Object GitCommit
-
-        # Get VSS Checkin message
-        $comment = $checkin | Out-String
-
-        # If a VSS Checkin comment exists, extract it. Else set default message
-        if($comment -match "Comment:((.|\n)*)"){
-            $comment = $Matches[0]
-            $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
-            $comment = $comment.Trim() # Remove unnecessary white space
-            if(([string]::IsNullOrEmpty($comment))){
-                $comment = "No comment for this commit"
-            }
-        }
-        else{
-            $comment = "No comment for this commit"
-        }
-
-        $commitComment = $comment
-
-        # Fill Git Commit object with extracted VSS Checkin info
-        $newGitCommit.userName        = $commit_stats[0]
-        $newGitCommit.message         = $commitComment
-        $newGitCommit.VSSFilesCommand = $command
-        $newGitCommit.timeStamp       = $unixTimeStamp
-
-        # Push Git Commit object onto list
+        $newGitCommit = CreateGitCommit $checkinCommand
         $gitObjectList.Add($newGitCommit) > $null
     }
+
 }
 
 ###################### Git Repository Construction ###############################
