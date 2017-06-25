@@ -1,35 +1,22 @@
 . C:/Users/MolinaBA/Desktop/VSStoGIT/GitObject.ps1
 . C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
-Clear-Host
-#################################### Flowchart of VSStoGit process #####################################################
-# Get VSS history ---> Get Unique VSS history --> Create List of Git Commit/Tag Objects --> Migrate VSS Repository to Git
-########################################################################################################################
 
 ################################## Script Set-Up Variables ################################
-## ----------------------------------------------------------------------------------------
-
 # Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
-
 # Tell script what Git repository to push data to
 $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/WinMQ-GitMigration-Test.git"
-
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
-
 # Tell script the name of the Git project (the one that was cloned)
 $gitFolderName = "WinMQ-GitMigration-Test"
-
 # Tell script what VSS repository to pull data from
 $VSS_ServerName = "`"$\00\WinMQ`""
-
 # Tell script the location of Git Bash (usually in C:\Program Files)
 $gitBashPath = "C:\Program Files\Git\bin\sh.exe"
-
-## ----------------------------------------------------------------------------------------
 ###########################################################################################
 
-# Setup working folder
+# Clone empty Git repository and get VSS history
 cd $workingFolder
 git config --global http.sslVerify false
 git clone -b $gitBranchName $gitRepositoryURL
@@ -42,11 +29,11 @@ $VSSHistory = ss History $VSS_ServerName -R # Grab VSS history
 # a file checkin or a label checkin.
 #
 #   INPUT:
-#     - $VSSHistory : A text file (probably very large) that contains every single
+#     - VSSHistory : A text file (probably very large) that contains every single
 #     VSS checkin.
 #
 #   OUTPUT:
-#     - $UniqueVSSCheckinLog : A text file (much smaller) that contains only unique
+#     - UniqueVSSCheckinLog : A text file (much smaller) that contains only unique
 #     VSS file and label checkins by date and time
 #################################################################################
 
@@ -63,7 +50,7 @@ $UniqueVSSCheckinLog = "VSSCheckinLog-Unique.txt"
 New-Item "$workingFolder/$UniqueVSSCheckinLog" -type file
 
 # Get VSS checkins with dates that are greater to or equal than 2004
-$content     = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][4-9])|([1][0-9]))(.*)"
+$content = get-content "$workingFolder/$HistoryFileName" | select-string -Pattern  "Date:(.*)/(.*)/(([0][4-9])|([1][0-9]))(.*)"
 
 # Reverse date/time content (Git commands will be performed starting from 2004-Present)
 [array]::Reverse($content)
@@ -117,25 +104,23 @@ ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
     $checkinCommand = $checkinCommand -Replace 'Get','History'
     # run the vss history command and store the output
     $checkin = invoke-expression $checkinCommand | select -Skip 3
-
-    # Handles when the stupid SourceSafe Command line utility doesnt work (i.e. error "Version not found")
-    if($checkin -eq $Null){Continue}
-
-    # Checkin contains both label and file(s) checkin on same date
+    # Handles when the stupid SourceSafe command line utility doesnt work (i.e. error "Version not found")
+    if($checkin -eq $Null){
+      Continue
+    }
+    # Create a Git commit and Git tag when a VSS checkin contains both label and file(s) checkin on same date
     elseif($checkin -match "Checked in" -and $checkin -match "Label:"){
         $newGitCommit = CreateGitCommit $checkinCommand
         $newGitTag    = CreateGitTag $checkinCommand
         $gitObjectList.Add($newGitCommit) > $null
         $gitObjectList.Add($newGitTag) > $null
     }
-
-    # Checkin contains only a label
+    # Create a Git tag if the VSS checkin contains only a label
     elseif($checkin -match "Label:"){
         $newGitTag = CreateGitTag $checkinCommand
         $gitObjectList.Add($newGitTag) > $null
     }
-
-    # Checkin contains only file(s) checkins
+    # Else create a Git commit if the VSS checkin contains only file(s) checkins
     else{
         $newGitCommit = CreateGitCommit $checkinCommand
         $gitObjectList.Add($newGitCommit) > $null
@@ -167,8 +152,9 @@ ForEach($currentObject in $gitObjectList){
 
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
+
         # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
-        # First need to change permissions on every file except README.md and .git
+        # Change permissions on every file except README.md and .git
         Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
         # Remove files
         Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md |

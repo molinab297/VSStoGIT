@@ -5,11 +5,11 @@
 # into a Unix time stamp.
 #
 # INPUT:
-#   - [string]$date : Date in 'MM\DD\YY' format
-#   - [string]$time : Time in 'HH:MM A\P' format
+#   - [string]date : Date in 'MM\DD\YY' format
+#   - [string]time : Time in 'HH:MM A\P' format
 #
 # RETURNS:
-#   - $unixTimeStamp : A timestamp in Unix format
+#   - unixTimeStamp : A timestamp in Unix format
 #
 ###############################################################
 Function GetUnixTimeStamp{
@@ -31,14 +31,15 @@ param([string]$date,[string]$time)
 
 ################# Function SubtractByOneMin ####################
 # Purpose: Subtracts a timestamp, in format MM\DD\YY HH:MM, by
-# 1 minute.
+# 1 minute. This function is used when creating the SourceSafe
+# get commands in VSStoGIT.ps1
 #
 # INPUT:
-#   - [string]$date : Date in 'MM\DD\YY' format
-#   - [string]$time : Time in 'HH:MM A\P' format
+#   - [string]date : Date in 'MM\DD\YY' format
+#   - [string]time : Time in 'HH:MM A\P' format
 #
 # RETURNS:
-#   - [string]$dateTime : A string containing the date minus 1
+#   - [string]dateTime : A string containing the date minus 1
 #     minute
 #
 ###############################################################
@@ -52,5 +53,6 @@ param([string]$date,[string]$time)
       $dateTime = $dateTime -Replace '/','-'
       $dateTime = $dateTime -replace 'PM','p'
       $dateTime = $dateTime -replace 'AM','a'
+
       return $dateTime
 }
