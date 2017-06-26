@@ -4,17 +4,17 @@
 #                              Script Set-up Variables
 #----------------------------------------------------------------------------------------
 # Tell script where to place working folder
-$workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
+$workingFolder = New-Item "" -ItemType directory -force
 # Tell script what Git repository URL to push data to
-$gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/WinMQ-GitMigration-Test.git"
+$gitRepositoryURL = ""
 # Tell script what Git branch to push data to
-$gitBranchName = "00"
+$gitBranchName = ""
 # Tell script the name of the Git project
-$gitFolderName = "WinMQ-GitMigration-Test"
+$gitFolderName = ""
 # Tell script what VSS repository to pull data from
-$VSS_ServerName = "`"$\00\WinMQ`""
+$VSS_ServerName = "`" `""
 # Tell script the location of Git Bash (usually in C:\Program Files)
-$gitBashPath = "C:\Program Files\Git\bin\sh.exe"
+$gitBashPath = ""
 #----------------------------------------------------------------------------------------
 
 # Clone empty Git repository and get VSS history
