@@ -5,11 +5,11 @@
 #----------------------------------------------------------------------------------------
 # Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
-# Tell script what Git repository to push data to
+# Tell script what Git repository URL to push data to
 $gitRepositoryURL = "https://MolinaBA@USTR-GITLAB-1.na.uis.unisys.com/MCPTest/WinMQ-GitMigration-Test.git"
 # Tell script what Git branch to push data to
 $gitBranchName = "00"
-# Tell script the name of the Git project (the one that was cloned)
+# Tell script the name of the Git project
 $gitFolderName = "WinMQ-GitMigration-Test"
 # Tell script what VSS repository to pull data from
 $VSS_ServerName = "`"$\00\WinMQ`""
@@ -27,7 +27,7 @@ $VSSHistory = ss History $VSS_ServerName -R # Grab VSS history
 #----------------------------------------------------------------------------------------
 #                             Create Unique VSS Checkin Log
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
-# this by iterating through $UniqueVSSCheckinLog (which is a text file containing
+# this by iterating through UniqueVSSCheckinLog (which is a text file containing
 # unique SourceSafe checkins by date and time), and determining if the checkin is
 # a file checkin or a label checkin (or both perhaps).
 #
