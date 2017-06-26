@@ -1,4 +1,9 @@
+try{
 . C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
+}
+catch {
+  Write-Host "Error while importing HelperFunctions.ps1 Check path
+}
 
 ############################## Class GitCommit #############################
 # Represents a Git Commit object
@@ -105,13 +110,11 @@ param([string]$checkinCommand)
     else{
       $commitComment = "No comment for this commit"
     }
-
     # Fill Git Commit object with extracted VSS Checkin info
     $newGitCommit.userName        = $commit_stats[0]
     $newGitCommit.message         = $commitComment
     $newGitCommit.VSSFilesCommand = $checkinCommand
     $newGitCommit.timeStamp       = $unixTimeStamp
-
     return $newGitCommit
 }
 
@@ -173,12 +176,10 @@ param([string]$checkinCommand)
     if(([string]::IsNullOrEmpty($tagComment))){
         $tagComment = "No comment for this tag"
     }
-
     # Fill Git Tag object with extracted VSS label info
     $newGitTag.title     = $tagName
     $newGitTag.message   = $tagComment
     $newGitTag.userName  = $commit_stats[0]
     $newGitTag.timeStamp = $unixTimeStamp
-
     return $newGitTag
 }

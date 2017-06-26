@@ -6,7 +6,9 @@ catch{
   Write-Host "Error while importing GitObject/HelperFunctions .ps1. Check paths.
 }
 
-################################## Script Set-Up Variables ################################
+#----------------------------------------------------------------------------------------
+#                              Script Set-up Variables
+#----------------------------------------------------------------------------------------
 # Tell script where to place working folder
 $workingFolder = New-Item "C:/Users/MolinaBA/Desktop/VSStoGit" -ItemType directory -force
 # Tell script what Git repository to push data to
@@ -19,7 +21,7 @@ $gitFolderName = "WinMQ-GitMigration-Test"
 $VSS_ServerName = "`"$\00\WinMQ`""
 # Tell script the location of Git Bash (usually in C:\Program Files)
 $gitBashPath = "C:\Program Files\Git\bin\sh.exe"
-###########################################################################################
+#----------------------------------------------------------------------------------------
 
 # Clone empty Git repository and get VSS history
 cd $workingFolder
@@ -27,11 +29,13 @@ git config --global http.sslVerify false
 git clone -b $gitBranchName $gitRepositoryURL
 $VSSHistory = ss History $VSS_ServerName -R # Grab VSS history
 
-#######################  Create Unique VSS Checkin Log ##########################
+
+#----------------------------------------------------------------------------------------
+#                             Create Unique VSS Checkin Log
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
 # this by iterating through $UniqueVSSCheckinLog (which is a text file containing
 # unique SourceSafe checkins by date and time), and determining if the checkin is
-# a file checkin or a label checkin.
+# a file checkin or a label checkin (or both perhaps).
 #
 #   INPUT:
 #     - VSSHistory : A text file (probably very large) that contains every single
@@ -40,9 +44,7 @@ $VSSHistory = ss History $VSS_ServerName -R # Grab VSS history
 #   OUTPUT:
 #     - UniqueVSSCheckinLog : A text file (much smaller) that contains only unique
 #     VSS file and label checkins by date and time
-#################################################################################
-
-# Place VSS History in a text file and then move that file into the working folder
+#----------------------------------------------------------------------------------------
 $HistoryFileName = "VSSHistory.txt"
 New-Item "$workingFolder/$HistoryFileName" -type file
 New-Item "temp.txt" -type file
@@ -76,7 +78,7 @@ $newDate = $date -replace '/','-'
 
 
 ## Fill the unique dates/times text file with unique VSS Checkins. A unique VSS checkin will allow this script to
-## get the source/label files from VSS that were checked in at that exact date and time.
+## get the source/label files from VSS that were checked in with the timestamp
 $dateArrayLength = $date.Length
 for($index = 0; $index -lt $dateArrayLength; $index++) {
     $Different_Time = !($time[$index] -match $time[($index+1)]) -or !($time[($index+1)])
@@ -89,7 +91,8 @@ for($index = 0; $index -lt $dateArrayLength; $index++) {
     }
 }
 
-#######################  Construct Git Object List ##############################
+#----------------------------------------------------------------------------------------
+#                             Create Unique VSS Checkin Log
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
 # this by iterating through UniqueVSSCheckinLog (which is a text file containing
 # unique SourceSafe checkins by date and time), and determining if the checkin is
@@ -100,7 +103,7 @@ for($index = 0; $index -lt $dateArrayLength; $index++) {
 #
 #   OUTPUT:
 #     - gitObjectList : A list of Git Tag and Git Commit objects
-#################################################################################
+#----------------------------------------------------------------------------------------
 # Create empty list to store Git Commit and Git Tag objects
 $gitObjectList = New-Object System.Collections.ArrayList
 
@@ -134,7 +137,8 @@ ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 
 }
 
-###################### Git Repository Construction ###############################
+#----------------------------------------------------------------------------------------
+#                             Create Unique VSS Checkin Log
 # Purpose: This section iterates through gitObjectList (an ArrayList of Git Tags
 # and Git Commits) and executes Git commands based on the object type.
 #
@@ -147,8 +151,7 @@ ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 #
 #     - A filled Git repository : If every Git command succeeds, the target Git
 #     repository should be filled with every VSS file and its corresponding history.
-##################################################################################
-
+#----------------------------------------------------------------------------------------
 New-Item "GitCommands.sh" -type file  # Create Git command file that will be executed
 New-Item "OverallLog.txt" -type file  # Create log file which will contain every git commit/git tag command that is executed
 $commitCounter = 1 # For displaying commit number on top of each commit in OverallLog.txt
@@ -177,7 +180,7 @@ ForEach($currentObject in $gitObjectList){
 
         # Change Committer's name
         Add-Content "GitCommands.sh" "git commit --amend --date `"$($currentObject.timeStamp) +0000`" --no-edit"
-        Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@email.com>`" --no-edit"
+        Add-Content "GitCommands.sh" "git commit --amend --author `"$($currentObject.userName) <$($currentObject.userName)@unisys.com>`" --no-edit"
 
         # Change Commit's date
         Add-Content "GitCommands.sh" "export GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
@@ -192,7 +195,7 @@ ForEach($currentObject in $gitObjectList){
         # Set Tagger name, email, and commit date
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
-        Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@email.com`""
+        Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@unisys.com`""
         Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
 
         # Create and push annotated Git Tag
