@@ -59,10 +59,12 @@ param([string]$checkinCommand)
 
     # When the VSS command line utility refuses to output anything...
      if(([string]::IsNullOrEmpty($checkin))){
+       # Try removing the '-#1' flag to see if the VSS CL utility outputs the checkin
         $command = $command -Replace ' -#1', ''
         $checkin = invoke-expression $command | select -Skip 3
         # On the off chance that the checkin is both a file & label checkin
         if(([string]::IsNullOrEmpty($checkin))){
+             # Add '-L' flag to display VSS label information
              $command = $command -Replace ' -L-', '-L'
              $checkin = invoke-expression $command | select -Skip 3
          }
@@ -75,7 +77,7 @@ param([string]$checkinCommand)
     $commit_stats = $commit_stats -Replace 'User: ',''
     $commit_stats = $commit_stats -Replace 'Date: ',''
     $commit_stats = $commit_stats -Replace 'Time: ',''
-    $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
+    $commit_stats = $commit_stats -split "\s+"
 
     # Get Unix time stamp. Pass in the Date and Time as parameters.
     try{
@@ -86,29 +88,27 @@ param([string]$checkinCommand)
     # Create new Git Commit object
     $newGitCommit = New-Object GitCommit
 
-    # Get VSS Checkin message
-    $comment = $checkin | Out-String
-
     # If a VSS Checkin comment exists, extract it. Else set default message
-    if($comment -match "Comment:((.|\n)*)"){
-         $comment = $Matches[0]
-         $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
-         $comment = $comment.Trim() # Remove unnecessary white space
-         if(!([string]::IsNullOrEmpty($comment))){
-          $comment = $comment -Replace '"', '' # Remove quotes from checkin comment (Quotes may screw up Git commit message)
-          $comment = $comment -Replace '\*((.|\n)*)', '' # Remove extraneous checkins that may get caught in the commit comment
+    $commitComment = $checkin | Out-String
+    if($commitComment -match "Comment:((.|\n)*)"){
+         $commitComment = $Matches[0]
+         $commitComment = $commitComment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
+         $commitComment = $commitComment.Trim() # Remove unnecessary white space
+         if(!([string]::IsNullOrEmpty($commitComment))){
+          $commitComment = $commitComment -Replace '"', '' # Remove quotes from checkin comment (Quotes may screw up Git commit message)
+          $commitComment = $commitComment -Replace '\*((.|\n)*)', '' # Remove extraneous checkins that may get caught in the commit comment
         }
         else{
-          $comment = "No comment for this commit"
+          $commitComment = "No comment for this commit"
         }
     }
     else{
-      $comment = "No comment for this commit"
+      $commitComment = "No comment for this commit"
     }
 
     # Fill Git Commit object with extracted VSS Checkin info
     $newGitCommit.userName        = $commit_stats[0]
-    $newGitCommit.message         = $comment
+    $newGitCommit.message         = $commitComment
     $newGitCommit.VSSFilesCommand = $checkinCommand
     $newGitCommit.timeStamp       = $unixTimeStamp
 
@@ -144,7 +144,7 @@ param([string]$checkinCommand)
     $commit_stats = $commit_stats -Replace 'User: ',''
     $commit_stats = $commit_stats -Replace 'Date: ',''
     $commit_stats = $commit_stats -Replace 'Time: ',''
-    $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
+    $commit_stats = $commit_stats -split "\s+"
 
     # Get Unix time stamp. Pass in the Date and Time as parameters.
     # Get Unix time stamp. Pass in the Date and Time as parameters.
