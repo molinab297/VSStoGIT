@@ -95,7 +95,8 @@ param([string]$checkinCommand)
          $comment = $comment -Replace 'Comment:','' # Remove unnecessary 'Comment:'
          $comment = $comment.Trim() # Remove unnecessary white space
          if(!([string]::IsNullOrEmpty($comment))){
-          $comment = $comment -Replace '"', '' #Remove quotes from checkin comment (Quotes may screw up Git commit message)
+          $comment = $comment -Replace '"', '' # Remove quotes from checkin comment (Quotes may screw up Git commit message)
+          $comment = $comment -Replace '\*((.|\n)*)', '' # Remove extraneous checkins that may get caught in the commit comment
         }
         else{
           $comment = "No comment for this commit"

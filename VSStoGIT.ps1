@@ -77,7 +77,8 @@ $newDate = $date -replace '/','-'
 
 ## Fill the unique dates/times text file with unique VSS Checkins. A unique VSS checkin will allow this script to
 ## get the source/label files from VSS that were checked in at that exact date and time.
-for($index = 0; $index -lt $date.Length; $index++) {
+$dateArrayLength = $date.Length
+for($index = 0; $index -lt $dateArrayLength; $index++) {
     $Different_Time = !($time[$index] -match $time[($index+1)]) -or !($time[($index+1)])
     $Same_Time_Diff_Date = ($time[$index] -match $time[($index+1)]) -and !($date[$index] -match $date[($index+1)])
     if($Different_Time -or $Same_Time_Diff_Date){
@@ -90,15 +91,15 @@ for($index = 0; $index -lt $date.Length; $index++) {
 
 #######################  Construct Git Object List ##############################
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
-# this by iterating through $UniqueVSSCheckinLog (which is a text file containing
+# this by iterating through UniqueVSSCheckinLog (which is a text file containing
 # unique SourceSafe checkins by date and time), and determining if the checkin is
 # a file checkin or a label checkin.
 #
 #   INPUT:
-#     - $UniqueVSSCheckinLog : A text file containing unique VSS checkin date/times
+#     - UniqueVSSCheckinLog : A text file containing unique VSS checkin date/times
 #
 #   OUTPUT:
-#     - $gitObjectList : A list of Git Tag and Git Commit objects
+#     - gitObjectList : A list of Git Tag and Git Commit objects
 #################################################################################
 # Create empty list to store Git Commit and Git Tag objects
 $gitObjectList = New-Object System.Collections.ArrayList
