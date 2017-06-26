@@ -1,11 +1,5 @@
-try{
 . C:/Users/MolinaBA/Desktop/VSStoGIT/GitObject.ps1
 . C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
-}
-catch{
-  Write-Host "Error while importing GitObject/HelperFunctions .ps1. Check paths.
-}
-
 #----------------------------------------------------------------------------------------
 #                              Script Set-up Variables
 #----------------------------------------------------------------------------------------

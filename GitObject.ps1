@@ -1,9 +1,4 @@
-try{
 . C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
-}
-catch {
-  Write-Host "Error while importing HelperFunctions.ps1 Check path
-}
 
 ############################## Class GitCommit #############################
 # Represents a Git Commit object
