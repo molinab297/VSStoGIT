@@ -57,10 +57,16 @@ param([string]$checkinCommand)
     # run the vss history command and store the output
     $checkin = invoke-expression $command | select -Skip 3
 
-    if(([string]::IsNullOrEmpty($checkin))){
-       $command = $command -Replace ' -#1', ''
-       $checkin = invoke-expression $command | select -Skip 3
-    }
+    # When the VSS command line utility refuses to output anything...
+     if(([string]::IsNullOrEmpty($checkin))){
+        $command = $command -Replace ' -#1', ''
+        $checkin = invoke-expression $command | select -Skip 3
+        # On the off chance that the checkin is both a file & label checkin
+        if(([string]::IsNullOrEmpty($checkin))){
+             $command = $command -Replace ' -L-', '-L'
+             $checkin = invoke-expression $command | select -Skip 3
+         }
+     }
 
     $checkinCommand = $checkinCommand -Replace 'History','Get'
 
@@ -72,7 +78,10 @@ param([string]$checkinCommand)
     $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
 
     # Get Unix time stamp. Pass in the Date and Time as parameters.
-    $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
+    try{
+        $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
+    }
+    catch{Write-Host "Error with getting unix time stamp"}
 
     # Create new Git Commit object
     $newGitCommit = New-Object GitCommit
@@ -137,7 +146,11 @@ param([string]$checkinCommand)
     $commit_stats = $commit_stats -split "\s+" # Splits User, Date, & Time into an array
 
     # Get Unix time stamp. Pass in the Date and Time as parameters.
-    $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
+    # Get Unix time stamp. Pass in the Date and Time as parameters.
+    try{
+        $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
+    }
+    catch{Write-Host "Error with getting unix time stamp"}
 
     # Create new Git Tag object
     $newGitTag = New-Object GitTag
