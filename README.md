@@ -8,4 +8,4 @@ VSStoGit is a PowerShell script that can migrate (gasp) Microsoft SourceSafe rep
 ### Known Issues
 - Git.exe needs to be on the Windows search path (i.e. the PATH environment variable). 
 - Sometimes the VSS command line utility refuses to get history/get latest versions for certain files, and when that happens this script simply skips right over that checkin.
-- Email addresses for Git commits are in formatted as "<name<name>>@email.com", where name is pulled from the corresponding VSS checkin.
+- Email addresses for Git commits are formatted as "<name<name>>@email.com", where name is pulled from the corresponding VSS checkin.
