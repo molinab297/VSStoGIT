@@ -190,7 +190,7 @@ ForEach($currentObject in $gitObjectList){
         Set-Content "GitCommands.sh" "cd $gitFolderName" -force
         Add-Content "GitCommands.sh" "git config --global user.name `"$($currentObject.userName)`""
         Add-Content "GitCommands.sh" "git config --global user.email `"$($currentObject.userName)@unisys.com`""
-        Add-Content "GitCommands.sh" "set GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
+        Add-Content "GitCommands.sh" "export GIT_COMMITTER_DATE=`"$($currentObject.timeStamp) +0000`""
 
         # Create and push annotated Git Tag
         Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
