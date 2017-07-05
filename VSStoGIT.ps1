@@ -194,6 +194,7 @@ ForEach($currentObject in $gitObjectList){
 
         # Create and push annotated Git Tag
         Add-Content "GitCommands.sh" "git tag -a `"$($currentObject.title)`" -m `"$($currentObject.message)`""
+        Add-Content "GitCommands.sh" "git commit --amend --date `"$($currentObject.timeStamp) +0000`" --no-edit"
         Add-Content "GitCommands.sh" "git push origin $gitBranchName --tags"
     }
 
