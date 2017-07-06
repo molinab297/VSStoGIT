@@ -86,7 +86,7 @@ for($index = 0; $index -lt $dateArrayLength; $index++) {
 }
 
 #----------------------------------------------------------------------------------------
-#                             Create Unique VSS Checkin Log
+#                             Build Git Object List
 # Purpose: This section constructs a list of Git Tag and Git Commit objects. It does
 # this by iterating through UniqueVSSCheckinLog (which is a text file containing
 # unique SourceSafe checkins by date and time), and determining if the checkin is
@@ -98,6 +98,7 @@ for($index = 0; $index -lt $dateArrayLength; $index++) {
 #   OUTPUT:
 #     - gitObjectList : A list of Git Tag and Git Commit objects
 #----------------------------------------------------------------------------------------
+Write-Host "Building Git object list ..."
 # Create empty list to store Git Commit and Git Tag objects
 $gitObjectList = New-Object System.Collections.ArrayList
 
@@ -132,7 +133,7 @@ ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 }
 
 #----------------------------------------------------------------------------------------
-#                             Create Unique VSS Checkin Log
+#                           Migrate from VSS to Git
 # Purpose: This section iterates through gitObjectList (an ArrayList of Git Tags
 # and Git Commits) and executes Git commands based on the object type.
 #
@@ -146,6 +147,7 @@ ForEach($checkinCommand in Get-Content $workingFolder/$UniqueVSSCheckinLog){
 #     - A filled Git repository : If every Git command succeeds, the target Git
 #     repository should be filled with every VSS file and its corresponding history.
 #----------------------------------------------------------------------------------------
+Write-Host "Starting migration process ..."
 New-Item "GitCommands.sh" -type file  # Create Git command file that will be executed
 New-Item "OverallLog.txt" -type file  # Create log file which will contain every git commit/git tag command that is executed
 $commitCounter = 1 # For displaying commit number on top of each commit in OverallLog.txt

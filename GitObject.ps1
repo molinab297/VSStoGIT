@@ -83,7 +83,10 @@ param([string]$checkinCommand)
     try{
         $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
     }
-    catch{Write-Host "Error with getting unix time stamp"}
+    catch{
+      Write-Host @"Error with getting unix time stamp from checkin. This is most likely the VSS command line utility's fault.
+      Try running the command: $checkinCommand using the command prompt to see if any checkin is being returned."@
+    }
 
     # Create new Git Commit object
     $newGitCommit = New-Object GitCommit
@@ -149,7 +152,10 @@ param([string]$checkinCommand)
     try{
         $unixTimeStamp = GetUnixTimeStamp $commit_stats[1] $commit_stats[2]
     }
-    catch{Write-Host "Error with getting unix time stamp"}
+    catch{
+      Write-Host @"Error with getting unix time stamp from checkin. This is most likely the VSS command line utility's fault.
+      Try running the command: $checkinCommand using the command prompt to see if any checkin is being returned."@
+    }
 
     # Create new Git Tag object
     $newGitTag = New-Object GitTag
