@@ -1,4 +1,5 @@
-################# Function GetUnixTimeStamp ####################
+# ------------------------------------------------------------------------
+#                        Function GetUnixTimeStamp
 # Purpose: Git accepts 3 types of time formats when modifying
 # the date/time of Git Commits. The Unix time stamp format is
 # one of these time formats. This function converts date and time
@@ -11,7 +12,7 @@
 # RETURNS:
 #   - unixTimeStamp : A timestamp in Unix format
 #
-###############################################################
+# ------------------------------------------------------------------------
 Function GetUnixTimeStamp{
 param([string]$date,[string]$time)
 
@@ -29,7 +30,8 @@ param([string]$date,[string]$time)
   return $unixTimeStamp
 }
 
-################# Function SubtractByOneMin ####################
+# ------------------------------------------------------------------------
+#                       Function SubtractByOneMin
 # Purpose: Subtracts a timestamp, in format MM\DD\YY HH:MM, by
 # 1 minute. This function is used when creating the SourceSafe
 # get commands in VSStoGIT.ps1
@@ -42,7 +44,7 @@ param([string]$date,[string]$time)
 #   - [string]dateTime : A string containing the date minus 1
 #     minute
 #
-###############################################################
+# ------------------------------------------------------------------------
 Function SubtractByOneMin {
 param([string]$date,[string]$time)
       $time = $time -Replace 'p','pm'

@@ -1,7 +1,8 @@
 . C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
 
-############################## Class GitCommit #############################
-# Represents a Git Commit object
+# -------------------------------------------------------------------------
+#                               Class GitCommit
+#   Class description: Represents a Git Commit object
 #
 #   Class Variables:
 #   [String]message         : Git commit message (VSS file checkin message)
@@ -9,7 +10,7 @@
 #   [String]timeStamp       : Git commit timestamp (in unix format)
 #   [String]VSSFilesCommand : A SourceSafe command to pull files from the VSS database.
 #                              These files will be included in this Git commit
-###########################################################################
+# -------------------------------------------------------------------------
 Class GitCommit{
     [String]$message
     [String]$userName
@@ -17,15 +18,16 @@ Class GitCommit{
     [String]$VSSFilesCommand
 }
 
-############################## Class GitTag #############################
-# Represents a Git Tag object
+# ------------------------------------------------------------------------
+#                               Class GitTag
+#   Class description: Represents a Git Tag object
 #
 #   Class Variables:
 #   [String]title     : Name of Git tag (VSS label name)
 #   [String]userName  : Author of Git tag (Which is the user who created a VSS label)
 #   [String]message   : Git tag message (VSS label message)
 #   [String]timeStamp : Git tag timestamp (in unix format)
-###########################################################################
+# ------------------------------------------------------------------------
 Class GitTag{
     [String]$title
     [String]$userName
@@ -34,8 +36,9 @@ Class GitTag{
 }
 
 
-######################### Function CreateGitCommit #########################
-# Creates a new Git commit object and returns it to the caller
+# ------------------------------------------------------------------------
+#                          Function CreateGitCommit
+#   Purpose: Creates a new Git commit object and returns it to the caller
 #
 #   DEPENDENCIES : HelperFunctions.ps1
 #
@@ -46,7 +49,7 @@ Class GitTag{
 #   OUTPUT:
 #    [GitCommit] newGitCommit : A Git commit object with information (author,message,
 #                               timestamp) from the history of the VSS file(s) checkin
-###########################################################################
+# ------------------------------------------------------------------------
 Function CreateGitCommit{
 param([string]$checkinCommand)
 
@@ -114,8 +117,9 @@ param([string]$checkinCommand)
 }
 
 
-######################### Function CreateGitTag ###########################
-# Creates a new Git tag object and returns it to the caller
+# --------------------------------------------------------------------------
+#                             Function CreateGitTag
+# Purpose: Creates a new Git tag object and returns it to the caller
 #
 #   DEPENDENCIES : HelperFunctions.ps1
 #
@@ -126,7 +130,7 @@ param([string]$checkinCommand)
 #   OUTPUT:
 #    [GitTag] newGitTag : A Git tag object with information (author,message,timestamp)
 #                         from the history of the VSS label
-###########################################################################
+# --------------------------------------------------------------------------
 Function CreateGitTag{
 param([string]$checkinCommand)
 

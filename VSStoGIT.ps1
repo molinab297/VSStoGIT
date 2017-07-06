@@ -1,21 +1,25 @@
-. C:/Users/MolinaBA/Desktop/VSStoGIT/GitObject.ps1
-. C:/Users/MolinaBA/Desktop/VSStoGIT/HelperFunctions.ps1
-#----------------------------------------------------------------------------------------
-#                              Script Set-up Variables
-#----------------------------------------------------------------------------------------
-# Tell script where to place working folder
-$workingFolder = New-Item "" -ItemType directory -force
-# Tell script what Git repository URL to push data to
-$gitRepositoryURL = ""
-# Tell script what Git branch to push data to
-$gitBranchName = ""
-# Tell script the name of the Git project
-$gitFolderName = ""
-# Tell script what VSS repository to pull data from
-$VSS_ServerName = "`" `""
-# Tell script the location of Git Bash (usually in C:\Program Files)
-$gitBashPath = ""
-#----------------------------------------------------------------------------------------
+Param([Parameter(Mandatory=$True,Position=1)]
+      [string]$gitFolderName,    # pass in name of the Git project
+      [Parameter(Mandatory=$True)]
+      [string]$gitRepositoryURL, # pass in Git Repository URL
+      [Parameter(Mandatory=$True)]
+      [string]$gitBranchName,    # pass in name of Git branch
+      [Parameter(Mandatory=$True)]
+      [string]$VSS_ServerName)   # pass in the VSS repository name to pull data from
+
+# Include other helper scripts. Note that these scripts need to be in the same
+# directory as this script.
+. C:$PSScriptRoot/GitObject.ps1
+. C:$PSScriptRoot/HelperFunctions.ps1
+
+# Surround VSS server name with quotes (serer name could have whitespace)
+$VSS_ServerName = `" + $VSS_ServerName + `"
+
+# Set location of Git Bash (usually in C:\Program Files)
+$gitBashPath = "C:\Program Files\git\bin"
+
+# Create working folder to perform all of the upcoming operations
+$workingFolder = New-Item "$PSScriptRoot/VSStoGit" -ItemType directory -force
 
 # Clone empty Git repository and get VSS history
 cd $workingFolder
