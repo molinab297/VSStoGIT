@@ -159,6 +159,8 @@ $commitCounter = 1 # For displaying commit number on top of each commit in Overa
 # Loop through gitObjectList and add each git commit/tag (in order) to the cloned git repository
 ForEach($currentObject in $gitObjectList){
 
+Write-Progress -Activity “Migrating to Git” -status “Commiting Git Object: $commitCounter” -percentComplete ($commitCounter / $gitObjectList.size*100)
+
     # If the current object is a Git Commit object, then call Git Add, Commit, Push commands
     if($currentObject.GetType().FullName -eq "GitCommit"){
 
@@ -214,3 +216,6 @@ ForEach($currentObject in $gitObjectList){
 # Delete no longer needed log files
 Remove-Item $UniqueVSSCheckinLog
 Remove-Item "GitCommands.sh"
+
+
+
