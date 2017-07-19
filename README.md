@@ -12,9 +12,6 @@ Simply open a PowerShell console window and type the following command:
 ````
 Note that GitObject.ps1 and HelperFunctions.ps1 need to be in the same directory that VSStoGit.ps1 is called in.
 
-## How well has this been tested?
-This program has not been extensively tested. It has successfully migrated the source code and project history from 10 VSS projects (under 500 MB of files), but that is only one dataset. 
-
 ### Known Issues
 - Git.exe needs to be set as a path environment variable. 
 - Sometimes the VSS command line utility refuses to get history/get latest versions for certain files, and when that happens this script simply skips right over that checkin. (You can thank Microsoft for that). 
