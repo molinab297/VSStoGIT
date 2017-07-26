@@ -166,9 +166,9 @@ Write-Progress -Activity “Migrating to Git” -status “Commiting Git Object:
 
         # Remove files except README.md and .git. This is done to create a clean working directory for the upcoming git commit
         # Change permissions on every file except README.md and .git
-        Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
+        Get-Childitem -Recurse -Path "$workingFolder/$gitFolderName" -exclude README.md,.git,.gitignore | where { !$_.PSisContainer } |Set-ItemProperty -Name IsReadOnly -Value $false
         # Remove files
-        Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md |
+        Get-ChildItem -Path "$workingFolder/$gitFolderName" -Recurse -exclude README.md,.gitignore |
         Select -ExpandProperty FullName |
         Where {$_ -notlike "$workingFolder/$gitFolderName/.git"} |
         sort length -Descending |
