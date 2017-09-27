@@ -8,7 +8,7 @@ VSStoGit is a PowerShell script that can migrate (gasp) Microsoft SourceSafe rep
 ## How to Use
 Simply open a PowerShell console window and type the following command:
 ```PowerShell
-./VSStoGit.ps1 "GitProjectName" "Git repository URL" "Git branch name" "VSS repository name"
+./VSStoGit.ps1 <GitProjectName> <Git repository URL> <Git branch name> <VSS repository name>
 ````
 Note that GitObject.ps1 and HelperFunctions.ps1 need to be in the same directory that VSStoGit.ps1 is called in.
 
